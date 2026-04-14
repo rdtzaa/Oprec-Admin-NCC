@@ -323,4 +323,3 @@ Belum ada kendala khusus yang terdokumentasi. Jika mengalami kendala umum, berik
 - **Firewall/NSG belum terbuka** → pastikan inbound rule mengizinkan port 80 dan/atau 3030.
 });
 
-app.listen(PORT, () => console.log(`Health service berjalan di port ${PORT}`));
