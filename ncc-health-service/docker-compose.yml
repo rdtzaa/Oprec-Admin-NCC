@@ -1,0 +1,9 @@
+services:
+  health-assignment:
+    build: .
+    container_name: ncc-health-assignment
+    restart: unless-stopped
+    ports:
+      - "3030:8080"
+    environment:
+      - PORT=8080
