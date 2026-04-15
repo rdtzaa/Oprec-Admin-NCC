@@ -312,6 +312,19 @@ Testing dari luar VPS:
 - Jika expose langsung (tanpa Nginx): `http://<IP-VPS>:3030/health`
 - Jika pakai Nginx: `http://<IP-VPS>/health`
 
+### 5) Push ke Docker Hub (di lokal)
+
+```bash
+docker login
+```
+Pertama kalian perlu login ke akun docker milik kalian.
+```bash
+docker build -t ncc-health-assignment .
+docker tag ncc-health-assignment:latest radityazhaf/rdtzaa:ncc-health-assignment
+docker push radityazhaf/rdtzaa:ncc-health-assignment
+```
+Sebelumnya kita telah melakukan build container lanjut kita akan memberikan tag dan melakukan push ke repository docker hub milik kalian. Setelah itu di VPS kita hanya perlu menyiapkan file `docker-compose.yml` yang sudah kita buat sebelumnya.
+
 ---
 
 ## Kendala Yang Dihadapi
