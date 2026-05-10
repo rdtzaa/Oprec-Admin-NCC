@@ -24,9 +24,6 @@
 Sistem monitoring dibangun menggunakan dua EC2 instance di AWS dengan arsitektur berikut:
 
 ```
-Internet (HTTPS)
-       │
-       ▼
 ┌─────────────────┐         ┌──────────────────────┐
 │   EC2 Grafana   │◄────────│   EC2 Prometheus      │
 │                 │  query  │                        │
@@ -334,7 +331,6 @@ Untuk membuktikan sistem monitoring berfungsi, dilakukan simulasi stress test:
 
 ### Stress CPU
 ```bash
-# Di server Grafana
 stress --cpu 2 --timeout 180
 ```
 
