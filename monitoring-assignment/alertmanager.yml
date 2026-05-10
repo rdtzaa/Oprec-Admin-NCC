@@ -1,0 +1,66 @@
+global:
+  resolve_timeout: 5m
+
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+route:
+  group_by: ['alertname', 'instance', 'severity']
+  group_wait: 30s        # wait
+  group_interval: 5m     # interval antar group
+  repeat_interval: 4h    # repeat
+  receiver: 'discord-ncc'  # default
+
+  # Route berdasarkan severity
+  routes:
+    - matchers:
+        - severity = "critical"
+      receiver: 'discord-ncc'
+      group_wait: 10s     
+      repeat_interval: 1h
+
+    - matchers:
+        - severity = "warning"
+      receiver: 'discord-ncc'
+      repeat_interval: 4h
+
+# Daftar receivers (contact points)
+receivers:
+  - name: 'discord-ncc'
+    discord_configs:
+      - webhook_url: 'https://discord.com/api/webhooks/1502825360272785428/u50uEUZZcJ6TIY1txnCcQl0K2jHJ7fBncYLXv7RlwD3sZm8su7I_tQZeSgzIdFVV7EME'
+        send_resolved: true
+        title: '{{ if eq .Status "firing" }}🔴 ALERT FIRING{{ else }}✅ RESOLVED{{ end }}'
+        message: |
+          {{ range .Alerts }}
+          **{{ .Annotations.summary }}**
+          {{ .Annotations.description }}
+          Severity: `{{ .Labels.severity }}`
+          Instance: `{{ .Labels.instance }}`
+          {{ end }}
+
+
+inhibit_rules:
+  - source_matchers:
+      - alertname = "NodeDown"
+    target_matchers:
+      - job = "node"
+    equal: ['instance']
+
+  - source_matchers:
+      - alertname = "CriticalCPUUsage"
+    target_matchers:
+      - alertname = "HighCPUUsage"
+    equal: ['instance']
+
+  - source_matchers:
+      - alertname = "CriticalMemoryUsage"
+    target_matchers:
+      - alertname = "HighMemoryUsage"
+    equal: ['instance']
+
+  - source_matchers:
+      - alertname = "CriticalDiskUsage"
+    target_matchers:
+      - alertname = "HighDiskUsage"
+    equal: ['instance']

@@ -1,0 +1,141 @@
+groups:
+  - name: ncc_server_alerts
+    interval: 30s
+    rules:
+      - alert: NodeDown
+        expr: up{job="node"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          team: ncc-lab
+        annotations:
+          summary: "🔴 Node Exporter DOWN - {{ $labels.instance }}"
+          description: |
+            Instance {{ $labels.instance }} sudah tidak dapat terhubung (timeout 1 menit). CEKKKKK!!!!
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 30s
+        labels:
+          severity: warning
+          team: ncc-lab
+        annotations:
+          summary: "⚠️ High CPU Usage - {{ $labels.instance }}"
+          description: |
+            CPU usage pada {{ $labels.instance }} sampe {{ printf "%.1f" $value }}% .
+
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 30s
+        labels:
+          severity: critical
+          team: ncc-lab
+        annotations:
+          summary: "🔴 Overload CPU - {{ $labels.instance }}"
+          description: |
+            CPU usage pada {{ $labels.instance }} mencapai {{ printf "%.1f" $value }}%.
+
+      - alert: HighLoadAverage
+        expr: node_load1 > (count without(cpu, mode) (node_cpu_seconds_total{mode="idle"}) * 0.8)
+        for: 30s
+        labels:
+          severity: warning
+          team: ncc-lab
+        annotations:
+          summary: "⚠️ Load Average Tinggi - {{ $labels.instance }}"
+          description: |
+            Load average pada {{ $labels.instance }} adalah {{ printf "%.2f" $value }},
+            melebihi 80% dari jumlah CPU cores.
+
+      - alert: HighMemoryUsage
+        expr: 100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 80
+        for: 30s
+        labels:
+          severity: warning
+          team: ncc-lab
+        annotations:
+          summary: "⚠️ High Memory Usage - {{ $labels.instance }}"
+          description: |
+            Memory usage pada {{ $labels.instance }} mencapai {{ printf "%.1f" $value }}%.
+
+      - alert: CriticalMemoryUsage
+        expr: 100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 95
+        for: 30s
+        labels:
+          severity: critical
+          team: ncc-lab
+        annotations:
+          summary: "🔴 Overload Memory - {{ $labels.instance }}"
+          description: |
+            Memory usage pada {{ $labels.instance }} mencapai {{ printf "%.1f" $value }}%
+
+      - alert: HighSwapUsage
+        expr: (node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) / node_memory_SwapTotal_bytes * 100 > 70
+        for: 1m
+        labels:
+          severity: warning
+          team: ncc-lab
+        annotations:
+          summary: "⚠️ High Swap Usage - {{ $labels.instance }}"
+          description: |
+            Swap usage pada {{ $labels.instance }} mencapai {{ printf "%.1f" $value }}% cek memori segera
+
+      - alert: HighDiskUsage
+        expr: 100 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint="/"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint="/"} * 100) > 75
+        for: 1m
+        labels:
+          severity: warning
+          team: ncc-lab
+        annotations:
+          summary: "⚠️ High Disk Usage - {{ $labels.instance }}"
+          description: |
+            Disk usage pada {{ $labels.instance }} ({{ $labels.mountpoint }}) mencapai 
+            {{ printf "%.1f" $value }}%
+
+      - alert: CriticalDiskUsage
+        expr: 100 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint="/"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint="/"} * 100) > 90
+        for: 1m
+        labels:
+          severity: critical
+          team: ncc-lab
+        annotations:
+          summary: "🔴 Over Disk Usage - {{ $labels.instance }}"
+          description: |
+            Disk usage pada {{ $labels.instance }} ({{ $labels.mountpoint }}) mencapai 
+            {{ printf "%.1f" $value }}%
+
+      - alert: DiskWillFillIn24Hours
+        expr: predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint="/"}[6h], 24 * 3600) < 0
+        for: 30m
+        labels:
+          severity: warning
+          team: ncc-lab
+        annotations:
+          summary: "⚠️ Prediksi Disk Penuh dalam 24 Jam - {{ $labels.instance }}"
+          description: |
+            Berdasarkan trend penggunaan disk 6 jam terakhir, disk pada {{ $labels.instance }}
+            ({{ $labels.mountpoint }}) diperkirakan akan penuh dalam 24 jam ke depan.
+
+      - alert: HighNetworkReceive
+        expr: rate(node_network_receive_bytes_total{device!~"lo|veth.*"}[5m]) * 8 > 100000000
+        for: 1m
+        labels:
+          severity: warning
+          team: ncc-lab
+        annotations:
+          summary: "⚠️ Network Receive Traffic Tinggi - {{ $labels.instance }}"
+          description: |
+            Network receive pada {{ $labels.instance }} ({{ $labels.device }}) mencapai 
+            {{ humanize $value }}bps
+
+      - alert: NetworkErrors
+        expr: rate(node_network_receive_errs_total{device!~"lo|veth.*"}[5m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+          team: ncc-lab
+        annotations:
+          summary: "⚠️ Network Errors Terdeteksi - {{ $labels.instance }}"
+          description: |
+            Network errors terdeteksi pada {{ $labels.instance }} ({{ $labels.device }}): 
+            {{ printf "%.2f" $value }} errors/sec.
